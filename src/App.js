@@ -4,24 +4,37 @@ import './App.css';
 const options = [
   { value: "earthquake", label: "지진"},
   { value: "stom", label: "폭풍우"},
-  { value: "eruption", label: "분출"},
   { value: "thunderbolt", label: "낙뢰"},
   { value: "tsunami", label: "해일"},
   { value: "spout", label: "용오름"},
   { value: "bigbang", label: "대폭발"},
   { value: "hellfire", label: "업화"},
-  { value: "shockwave", label: "충격파"}
+  { value: "shockwave", label: "충격파"},
+  { value: "lightning", label: "벼락"},
+  { value: "purification", label: "정화"},
+  { value: "eruption", label: "분출"},
+  { value: "resonance", label: "세계수의 공명"},
+];
+
+const specital = [ 
+  { type: 0, name: "재배치"},
+  { type: 1, name: "축복"},
+  { type: 2, name: "추가"},
+  { type: 3, name: "신비"},
+  { type: 4, name: "강화"},
+  { type: 5, name: "복제"},
 ];
 
 class Square {
   constructor() {
     this.probability = 0;
-    this.specital = { enable: false, type: 0, name: ""};
+    this.specital = null;
     this.activation = true;
     this.color = null;
     this.hide = true;
     this.visibility = "";
     this.distortion = false;
+    this.text = "";
   }
 }
 
@@ -33,7 +46,10 @@ class Spirit {
   }
 
   getString() {
-    let str = this.name + "[";
+    let str = this.name;
+    if (this.value === "eruption" && this.value === "resonance")
+      return (str);
+    str += "[";
     for (let i = 0; i < this.level; i++) {
       str += "★";
     }
@@ -49,31 +65,41 @@ class inventory {
     this.levelUpSpirit();
     this.selected = null;
     this.change = 2;
+    this.specital = false;
+    this.useIndex = null;
   }
 
   changeHand(index) {
     if (this.change > 0) {
-      this.hand[index] = this.createSpirit();
+      this.hand[index] = this.poket.shift();
+      this.poket.push(this.createSpirit());
       this.levelUpSpirit();
+      this.selected = null;
       this.change--;
     }
+    console.log(this.hand);
   }
 
   useSpirit(index) {
     let spirit = null;
-    if (index === 0) 
+    if (index === 0) {
       spirit = this.hand.shift();
-    else 
+      this.useIndex = 0;
+    }
+    else {
       spirit = this.hand.pop();
+      this.useIndex = 1;
+    }
+
+    this.selected = null;
     this.hand.push(this.poket.shift());
     this.poket.push(this.createSpirit());
     this.levelUpSpirit();
-    this.selected = null;
     return (spirit);
   }
 
   createSpirit() {
-    let randomNum = Math.floor(Math.random() * 9);
+    let randomNum = Math.floor(Math.random() * 10);
     let obj = options[randomNum];
     let spirit = new Spirit(obj.label, obj.value);
     return spirit;
@@ -81,13 +107,43 @@ class inventory {
 
   levelUpSpirit() {
     if (this.hand[0].value === this.hand[1].value) {
-      if (this.hand[0].level < 3) {
+      if (this.hand[0].level < 3 && this.hand[0].value !== "eruption" && this.hand[0].value !== "resonance") {
         this.hand[0].level++;
         this.hand.pop();
         this.hand.push(this.createSpirit());
         this.levelUpSpirit();
       }
     }
+  }
+
+  mystery() {
+    let leftIdx = (this.useIndex === 0 ? 1 : 0);
+    let randomNum = Math.floor(Math.random() * 2);
+    delete this.hand[leftIdx];
+    if (randomNum === 0) {
+      this.hand[leftIdx] = new Spirit("분출", "eruption");
+    }
+    else {
+      this.hand[leftIdx] = new Spirit("세계수의 공명", "resonance");
+    }
+    console.log(this.useIndex);
+    console.log(leftIdx);
+    console.log(this.hand[leftIdx]);
+  }
+
+  enhance() {
+    let leftIdx = (this.useIndex === 0 ? 1 : 0);
+    
+    if (this.hand[leftIdx].level < 3) {
+      this.hand[leftIdx].level++;
+    }
+  }
+
+  reproduction() {
+    let leftIdx = (this.useIndex === 0 ? 1 : 0);
+    delete this.hand[leftIdx];
+    this.hand[leftIdx] = this.hand[this.useIndex];
+
   }
 
   getHandString() {
@@ -100,6 +156,7 @@ class inventory {
                    this.poket[1].getString() + ", " +
                    this.poket[2].getString() + " }");
   }
+
 }
 
 class board {
@@ -108,14 +165,68 @@ class board {
     for (let i=0; i<level**2; i++) {
       squares[i] = new Square();
     }
-    let i = Math.floor(level / 2);
-    squares[i * level + i].distortion = true;
-    squares[i * level + i].color = "purple";
     this.level = level;
     this.slate = squares;
     this.destroyed = [];
     this.left = level**2 - 1;
     this.count = 1;
+  }
+
+  // 머리 장갑 : 모서리 1개
+  // 상의 : 마름모
+  // 견갑 하의 : 풀
+  setBoard(flag) {
+    switch (flag) {
+      case 0:
+        this.slate[0].visibility = "hidden";
+        this.slate[this.level - 1].visibility = "hidden";
+        this.slate[this.level * (this.level - 1)].visibility = "hidden";
+        this.slate[this.level * this.level - 1].visibility = "hidden";
+        break;
+      case 1:
+        this.slate[0].visibility = "hidden";
+        this.slate[1].visibility = "hidden";
+        this.slate[this.level].visibility = "hidden";
+
+        this.slate[this.level - 2].visibility = "hidden";
+        this.slate[this.level - 1].visibility = "hidden";
+        this.slate[this.level + (this.level - 1)].visibility = "hidden";
+
+        this.slate[this.level * (this.level - 2)].visibility = "hidden";
+        this.slate[this.level * (this.level - 1)].visibility = "hidden";
+        this.slate[this.level * (this.level - 1) + 1].visibility = "hidden";
+
+
+        this.slate[this.level * (this.level - 1) - 1].visibility = "hidden";
+        this.slate[this.level * this.level - 2].visibility = "hidden";
+        this.slate[this.level * this.level - 1].visibility = "hidden";
+        break;
+      default:
+        break;
+    }
+  }
+
+  setSpecital() {
+    let randomNum = Math.floor(Math.random() * 6);
+    let randomIndex = [];
+    for (let i = 0; i < this.slate.length; i++) {
+      this.slate[i].specital = null;
+      this.slate[i].color = null;
+      if (this.slate[i].distortion || this.slate[i].visibility === "hidden")
+        continue;
+      randomIndex.push(i);
+    }
+    
+    let idx = Math.floor(Math.random() * randomIndex.length);
+    this.slate[randomIndex[idx]].specital = specital[randomNum];
+    this.slate[randomIndex[idx]].color = "green";
+    this.slate[randomIndex[idx]].text = specital[randomNum].name;
+  }
+
+  setDistortion() {
+    let i = Math.floor(this.level / 2);
+    this.slate[i * this.level + i].distortion = true;
+    this.slate[i * this.level + i].color = "purple";
   }
 
   fallback() {
@@ -142,10 +253,12 @@ class App extends Component {
     super(props);
     let inven = new inventory();
     this.state = {
-      board: new board(5),
+      board: new board(6),
       inventory: inven,
       selectSpirit: null,
     };
+    //this.state.board.setDistortion();
+    this.state.board.setBoard(0);
   }
 
   // 지진 : 가로 1자
@@ -162,6 +275,7 @@ class App extends Component {
       board.slate[line * size + i].color = "yellow";
       board.slate[line * size + i].probability = 100 - (probability * diff);
       board.slate[line * size + i].hide = false;
+      board.slate[line * size + i].text = board.slate[line * size + i].probability.toString();
     }
     this.setState({ board });
   }
@@ -181,6 +295,7 @@ class App extends Component {
       board.slate[i * size + row].color = "yellow";
       board.slate[i * size + row].probability = 100 - (probability * diff);
       board.slate[i * size + row].hide = false;
+      board.slate[i * size + row].text = board.slate[i * size + row].probability.toString();
     }
     this.setState({ board });
   }
@@ -191,11 +306,13 @@ class App extends Component {
     board.slate[index].color = "yellow";
     board.slate[index].probability = 100;
     board.slate[index].hide = false;
+    board.slate[index].text = board.slate[index].probability.toString();
 
     this.setState({ board });
   }
   
   // 낙뢰 : 십자 1칸
+  // index 
   thunderbolt(index, probability) {
     const board = this.state.board;
     const selectSpirit = this.state.selectSpirit;
@@ -205,7 +322,7 @@ class App extends Component {
 
     if (selectSpirit.level > 1)
       probability = 100;
-    for (let i = 0; i < size; i++) {
+    for (let i = 0; i < 5; i++) {
       let idx = (i % 2 === 0 ? 
         (line - ((i / 2) - 1)) * size + row : line * size + row + (i - 2));
     
@@ -217,6 +334,7 @@ class App extends Component {
           board.slate[idx].color = "yellow";
           board.slate[idx].probability = (idx === index ? 100 : probability);
           board.slate[idx].hide = false;
+          board.slate[idx].text = board.slate[idx].probability.toString();
         }
       }
     }
@@ -255,6 +373,7 @@ class App extends Component {
           board.slate[idx].color = "yellow";
           board.slate[idx].probability = (idx === index ? 100 : probability);
           board.slate[idx].hide = false;
+          board.slate[idx].text = board.slate[idx].probability.toString();
         }
       }
     }
@@ -282,6 +401,7 @@ class App extends Component {
         board.slate[idx].color = "yellow";
         board.slate[idx].probability = 100 - (probability * Math.abs(diff));
         board.slate[idx].hide = false;
+        board.slate[idx].text = board.slate[idx].probability.toString();
       }
     }
     this.setState({ board });
@@ -306,12 +426,13 @@ class App extends Component {
     for (let i = 0; i < 4; i++) {
       let line_idx = (i % 2 === 0 ? line + (i - 2) : line + (i - 1));
       let row_idx = (i % 3 === 0 ? row: row - (2 * ((-1) ** i)));
-      if ((row_idx < 0 || row_idx > 4) || (line_idx < 0 || line_idx > 4))
+      if ((row_idx < 0 || row_idx > size - 1) || (line_idx < 0 || line_idx > size - 1))
         continue;
       let idx = line_idx * size + row_idx;
       board.slate[idx].color = "yellow";
       board.slate[idx].probability = (idx === index ? 100 : probability);
       board.slate[idx].hide = false;
+      board.slate[idx].text = board.slate[idx].probability.toString();
     }
     this.setState({ board });
   }
@@ -335,18 +456,214 @@ class App extends Component {
       board.slate[idx].color = "yellow";
       board.slate[idx].probability = (idx === index ? 100 : probability);
       board.slate[idx].hide = false;
+      board.slate[idx].text = board.slate[idx].probability.toString();
     }
     this.setState({ board });
   }
 
+  countLightning(level, index) {
+    const board = this.state.board;
+    const randomNum = Math.floor((Math.random() * 99) + 1);
+    const probability = 50;
+    const num = probability / (level * 2);
+    const randomIndex = [];
+    const boardIndex = [];
+    let count = 0;
+    let penalty = 1;
+
+    for (let i = 0; i < level * 2 + 1; i++) {
+      if (randomNum <= probability - (num * i))
+        count++;
+    }
+
+    for (let i = 0; i < board.slate.length; i++) {
+      if (board.slate[i].visibility === "hidden" && board.destroyed.find((j) => i === j) === undefined) {
+        continue;
+      }
+      boardIndex.push(i);
+    }
+
+    while (count > 0) {
+      let idx = boardIndex.splice(Math.floor(Math.random() * boardIndex.length),1)[0];
+      if (board.destroyed.find((i) => i === idx) !== undefined) {
+        if (penalty > 0) {
+          randomIndex.push(idx);
+          count--;
+          penalty--;
+        }
+      }
+      else {
+        if (board.slate[idx].distortion)
+          continue;
+        if (idx !== index) {
+          randomIndex.push(idx);
+          count--;
+        }
+      }
+    }
+    return (randomIndex);
+  }
+
+  // 벼락 : 레벨당 임의 2개 추가
+  lightning(index) {
+    const board = this.state.board;
+    const selectSpirit = this.state.selectSpirit;
+    const randomIndex = this.countLightning(selectSpirit.level, index);
+    for (let i = 0; i < randomIndex.length; i++) {
+      if (board.destroyed.find((j) => j === randomIndex[i]) !== undefined) {
+        board.slate[randomIndex[i]].probability = -100;
+      }
+      else {
+        board.slate[randomIndex[i]].probability = 100;
+      }
+    }
+
+    for (let i = 0; i < board.slate.length; i++) {
+      if (board.slate[i].visibility !== "hidden") {
+        if (i === index) {
+          board.slate[i].probability = 100;
+          board.slate[i].text = board.slate[i].probability.toString();
+        }
+        else {
+          board.slate[i].text = "?";
+        }
+        board.slate[i].color = "yellow";
+        board.slate[i].hide = false;
+      }
+    }
+    this.setState({ board });
+  }
+
+  // 정화
+  purification(index, probability) {
+    const board = this.state.board;
+    const selectSpirit = this.state.selectSpirit;
+    const size = Math.sqrt(board.slate.length);
+    const row = Math.floor(index % size);
+    const line = Math.floor(index / size);
+
+    if (selectSpirit.level > 1)
+      probability = 100;
+    for (let i = 0; i < 3; i++) {
+      let row_idx = row + (i - 1);
+      if ((row_idx < 0 || row_idx > size - 1))
+        continue;
+      let idx = line * size + row_idx;
+      board.slate[idx].color = "yellow";
+      board.slate[idx].probability = (idx === index ? 100 : probability);
+      board.slate[idx].hide = false;
+      board.slate[idx].text = board.slate[idx].probability.toString();
+    }
+    this.setState({ board });
+  }
+
+  // 세계수의 공명
+  resonance(index) {
+    const board = this.state.board;
+    const size = Math.sqrt(board.slate.length);
+    const row = Math.floor(index % size);
+    const line = Math.floor(index / size);
+
+    for (let i = 0; i < 5; i++) {
+      let row_idx = row + (i - 2);
+      if ((row_idx < 0 || row_idx > size - 1)) {
+        continue;
+      }
+      let idx = line * size + row_idx;
+      board.slate[idx].color = "yellow";
+      board.slate[idx].probability = 100;
+      board.slate[idx].hide = false;
+      board.slate[idx].text = board.slate[idx].probability.toString();
+    }
+
+    for (let i = 0; i < 5; i++) {
+      let line_idx = line + (i - 2);
+      if ((line_idx < 0 || line_idx > size - 1)) {
+        continue;
+      }
+      let idx = line_idx * size + row;
+      board.slate[idx].color = "yellow";
+      board.slate[idx].probability = 100;
+      board.slate[idx].hide = false;
+      board.slate[idx].text = board.slate[idx].probability.toString();
+    }
+    
+    this.setState({ board });
+  }
+
+  // specital
+  useSpecital(specital) {
+    const board = this.state.board;
+    const inventory = this.state.inventory;
+    
+    switch (specital.type) {
+      case 0:
+        this.reposition();
+        break;
+      case 1:
+        this.bless();
+        break;
+      case 2:
+        this.addition();
+        break;
+      case 3:
+        this.mystery();
+        break;
+      case 4:
+        this.enhance();
+        break;
+      case 5:
+        this.reproduction();
+        break;
+      default:
+        break;
+  }
+    this.setState({ board, inventory });
+  }
+
+  reposition() {
+
+  }
+
+  bless() {
+    const board = this.state.board;
+    board.left++;
+    this.setState({ board });
+  }
+
+  addition() {
+    const inventory = this.state.inventory;
+    inventory.change++;
+    this.setState({ inventory });
+  }
+
+  mystery() {
+    const inventory = this.state.inventory;
+    inventory.mystery();
+    this.setState({ inventory });
+  }
+  
+  enhance() {
+    const inventory = this.state.inventory;
+    inventory.enhance();
+    this.setState({ inventory });
+
+  }
+
+  reproduction() {
+    const inventory = this.state.inventory;
+    inventory.reproduction();
+    this.setState({ inventory });
+  }
+  
+
   handleMouseOver(index) {
     const board = this.state.board;
+    const selectSpirit = this.state.selectSpirit;
     const spirit = this.state.selectSpirit;
-    const size = Math.sqrt(board.slate.length);
 
     if (!spirit)
       return;
-
     if (board.slate[index].visibility === "hidden")
       return ;
     this.handleMouseOut();
@@ -358,47 +675,67 @@ class App extends Component {
         this.stom(index, 15);
         break;
       case options[2].value:
-        this.eruption(index);
-        break;
-      case options[3].value:
         this.thunderbolt(index, 50);
         break;
-      case options[4].value:
+      case options[3].value:
         this.tsunami(index, 15);
         break;
-      case options[5].value:
+      case options[4].value:
         this.spout(index, 50);
         break;
-      case options[6].value:
+      case options[5].value:
         this.bigbang(index, 15);
         break;
-      case options[7].value:
+      case options[6].value:
         this.hellfire(index, 50);
         break;
-      case options[8].value:
+      case options[7].value:
         this.shockwave(index, 75);
+        break;
+      case options[8].value:
+        this.lightning(index);
+        break;
+      case options[9].value:
+        this.purification(index, 50);
+        break;
+      case options[10].value:
+        this.eruption(index);
+        break;
+      case options[11].value:
+        this.resonance(index);
         break;
       default:
         break;
     }
-    let i = Math.floor(size / 2);
-    if (board.slate[i * size + i].distortion && board.slate[i * size + i].color === "yellow")
-      board.slate[i * size + i].color = "brown";
+
+    for (let i = 0; i < board.slate.length; i++) {
+      if (board.slate[i].distortion && board.slate[i].color === "yellow") {
+        board.slate[i].color = "brown";
+        if (selectSpirit.level === 3) {
+          board.slate[i].probability = 0;
+          board.slate[i].text = board.slate[i].probability.toString();
+        }
+      }
+    }
     this.setState({ board });
   }
 
   handleMouseOut() {
     const board = this.state.board;
-    const size = Math.sqrt(board.slate.length);
 
     for (let i = 0; i < board.slate.length; i++) {
       board.slate[i].color = null;
       board.slate[i].probability = 0;
-      board.slate[i].hide = true;
+      board.slate[i].hide = false;
+      board.slate[i].text = ".";
+      if (board.slate[i].distortion)
+        board.slate[i].color = "purple";
+      if (board.slate[i].specital !== null) {
+        board.slate[i].color = "green";
+        board.slate[i].text = board.slate[i].specital.name;
+
+      }
     }
-    let i = Math.floor(size / 2);
-    if (board.slate[i * size + i].distortion)
-      board.slate[i * size + i].color = "purple";
     this.setState({ board });
   }
 
@@ -413,7 +750,9 @@ class App extends Component {
         const randomNum = Math.floor((Math.random() * 99) + 1);
         if (randomNum <= board.slate[i].probability) {
           if (board.slate[i].distortion) {
-            if (selectSpirit.level !== 3)
+            if (selectSpirit.value === "purification" || selectSpirit.value === "resonance")
+              board.slate[i].visibility = "hidden";
+            else
               board.fallback();
           }
           else {
@@ -431,10 +770,14 @@ class App extends Component {
         }
       }
     }
-    inventory.useSpirit(inventory.selected);
-    selectSpirit = null; 
+    if (board.slate[index].specital !== null) {
+      this.useSpecital(board.slate[index].specital, selectSpirit);
+    }
     board.count++;
+    board.setSpecital();
+    selectSpirit = null; 
     this.handleMouseOver(index);
+    inventory.useSpirit(inventory.selected);
     this.setState({ board, inventory, selectSpirit });
     this.checkFinish();
   }
@@ -452,13 +795,23 @@ class App extends Component {
       inventory.selected = index;
       selectSpirit = inventory.hand[index];
     }
+    else {
+      inventory.selected = null;
+      selectSpirit = null;
+    }
     this.setState({ inventory, selectSpirit })
   }
 
   handleChangeClick(index) {
     const inventory = this.state.inventory;
+    let selectSpirit = this.state.selectSpirit;
+
     inventory.changeHand(index);
-    this.setState({ inventory });
+    if (inventory.selected === index) {
+      inventory.selected = null;
+      selectSpirit = null;
+    }
+    this.setState({ inventory, selectSpirit });
   }
 
   checkFinish() {
@@ -486,7 +839,7 @@ class App extends Component {
               onMouseOver={() => this.handleMouseOver(i * this.state.board.level + index)}
               onMouseOut={() => this.handleMouseOut()}
               onClick={() => this.handleBoardClick(i * this.state.board.level + index)}
-            >{button.hide?".":button.probability}</button>
+            >{button.text}</button>
           ))}
         </div>
       );
@@ -504,7 +857,7 @@ class App extends Component {
     //     </option>
     //   )));
 
-    // 정령변환 버튼
+    // 정령교체 버튼
     const change = [];
     for (let i = 0; i < 2; i++) {
       change.push(
@@ -521,7 +874,6 @@ class App extends Component {
         </button>
       )
     }
-
     // 정령카드 버튼
     const hand = [];
     for (let i = 0; i < 2; i++) {
@@ -560,7 +912,7 @@ class App extends Component {
     
     return (
       <div className="App">
-        <h1>장비 초월 시뮬레이터</h1>
+        <h1>test</h1>
         {/* <select onChange={this.handleSelect}>{spirit}</select> */}
         <div className="button-grid"
              style={{ margin: '30px'}}
