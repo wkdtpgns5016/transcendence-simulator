@@ -34,7 +34,7 @@ class Square {
     this.hide = true;
     this.visibility = "";
     this.distortion = false;
-    this.text = "";
+    this.text = ".";
   }
 }
 
@@ -67,6 +67,21 @@ class inventory {
     this.change = 2;
     this.specital = false;
     this.useIndex = null;
+    this.saveUse = null;
+  }
+
+  initInventory() {
+    delete this.poket;
+    delete this.hand;
+
+    this.poket = [this.createSpirit(), this.createSpirit(), this.createSpirit()];
+    this.hand = [this.createSpirit(), this.createSpirit()];
+    this.levelUpSpirit();
+    this.selected = null;
+    this.change = 2;
+    this.specital = false;
+    this.useIndex = null;
+    this.saveUse = null;
   }
 
   changeHand(index) {
@@ -77,24 +92,27 @@ class inventory {
       this.selected = null;
       this.change--;
     }
-    console.log(this.hand);
+  }
+
+  appendHand(index) {
+    this.hand[index] = this.poket.shift();
+    this.poket.push(this.createSpirit());
+    this.levelUpSpirit();
+    this.selected = null;
   }
 
   useSpirit(index) {
     let spirit = null;
     if (index === 0) {
-      spirit = this.hand.shift();
+      spirit = this.hand[0];
       this.useIndex = 0;
     }
     else {
-      spirit = this.hand.pop();
+      spirit = this.hand[1];
       this.useIndex = 1;
     }
 
     this.selected = null;
-    this.hand.push(this.poket.shift());
-    this.poket.push(this.createSpirit());
-    this.levelUpSpirit();
     return (spirit);
   }
 
@@ -109,8 +127,7 @@ class inventory {
     if (this.hand[0].value === this.hand[1].value) {
       if (this.hand[0].level < 3 && this.hand[0].value !== "eruption" && this.hand[0].value !== "resonance") {
         this.hand[0].level++;
-        this.hand.pop();
-        this.hand.push(this.createSpirit());
+        this.appendHand(1);
         this.levelUpSpirit();
       }
     }
@@ -119,31 +136,27 @@ class inventory {
   mystery() {
     let leftIdx = (this.useIndex === 0 ? 1 : 0);
     let randomNum = Math.floor(Math.random() * 2);
-    delete this.hand[leftIdx];
     if (randomNum === 0) {
       this.hand[leftIdx] = new Spirit("분출", "eruption");
     }
     else {
       this.hand[leftIdx] = new Spirit("세계수의 공명", "resonance");
     }
-    console.log(this.useIndex);
-    console.log(leftIdx);
-    console.log(this.hand[leftIdx]);
   }
 
   enhance() {
     let leftIdx = (this.useIndex === 0 ? 1 : 0);
-    
-    if (this.hand[leftIdx].level < 3) {
-      this.hand[leftIdx].level++;
+    if (this.hand[leftIdx].value !== "eruption" && this.hand[leftIdx].value !== "resonance") {
+      if (this.hand[leftIdx].level < 3) {
+        this.hand[leftIdx].level++;
+      }
     }
   }
 
-  reproduction() {
+  reproduction(selectSpirit) {
     let leftIdx = (this.useIndex === 0 ? 1 : 0);
-    delete this.hand[leftIdx];
-    this.hand[leftIdx] = this.hand[this.useIndex];
-
+    this.hand[leftIdx] = selectSpirit;
+    this.levelUpSpirit();
   }
 
   getHandString() {
@@ -168,14 +181,44 @@ class board {
     this.level = level;
     this.slate = squares;
     this.destroyed = [];
-    this.left = level**2 - 1;
+    this.left = level**2;
     this.count = 1;
+  }
+
+  initBoard(level) {
+
+    let squares = [];
+    for (let i=0; i<level**2; i++) {
+      squares[i] = new Square();
+    }
+    this.level = level;
+    this.slate = squares;
+    this.destroyed = [];
+    this.left = level**2;
+    this.count = 1;
+  }
+
+  countLeftSlate() {
+    let count = 0;
+    for (let i = 0; i < this.level**2; i++) {
+      if (this.slate[i].visibility !== "hidden" && this.slate[i].distortion === false)
+        count++;
+    }
+    return (count);
   }
 
   // 머리 장갑 : 모서리 1개
   // 상의 : 마름모
   // 견갑 하의 : 풀
-  setBoard(flag) {
+  setBoard(selectEquipment) {
+    let flag = 0;
+    if (selectEquipment === "3") {
+      flag = 1;
+    }
+    else if (selectEquipment === "2" || selectEquipment === "4") {
+      flag = 3;
+    }
+
     switch (flag) {
       case 0:
         this.slate[0].visibility = "hidden";
@@ -204,6 +247,7 @@ class board {
       default:
         break;
     }
+    this.left = this.countLeftSlate();
   }
 
   setSpecital() {
@@ -216,17 +260,76 @@ class board {
         continue;
       randomIndex.push(i);
     }
-    
+    if (randomIndex.length === 0)
+      return;
     let idx = Math.floor(Math.random() * randomIndex.length);
     this.slate[randomIndex[idx]].specital = specital[randomNum];
     this.slate[randomIndex[idx]].color = "green";
     this.slate[randomIndex[idx]].text = specital[randomNum].name;
   }
 
-  setDistortion() {
-    let i = Math.floor(this.level / 2);
-    this.slate[i * this.level + i].distortion = true;
-    this.slate[i * this.level + i].color = "purple";
+  setDistortion(selectEquipment, selectLevel) {
+    if (selectLevel === "2") {
+      switch (selectEquipment) {
+        case "1":
+          this.slate[7].distortion = true;
+          this.slate[7].color = "purple";
+          this.slate[14].distortion = true;
+          this.slate[14].color = "purple";
+          this.slate[21].distortion = true;
+          this.slate[21].color = "purple";
+          this.slate[28].distortion = true;
+          this.slate[28].color = "purple";
+          break;
+
+        case "2":
+          this.slate[10].distortion = true;
+          this.slate[10].color = "purple";
+          this.slate[15].distortion = true;
+          this.slate[15].color = "purple";
+          this.slate[20].distortion = true;
+          this.slate[20].color = "purple";
+          this.slate[25].distortion = true;
+          this.slate[25].color = "purple";
+          break;
+
+        case "3":
+          this.slate[14].distortion = true;
+          this.slate[14].color = "purple";
+          this.slate[15].distortion = true;
+          this.slate[15].color = "purple";
+          this.slate[20].distortion = true;
+          this.slate[20].color = "purple";
+          this.slate[21].distortion = true;
+          this.slate[21].color = "purple";
+          break;
+
+        case "4":
+          this.slate[7].distortion = true;
+          this.slate[7].color = "purple";
+          this.slate[8].distortion = true;
+          this.slate[8].color = "purple";
+          this.slate[27].distortion = true;
+          this.slate[27].color = "purple";
+          this.slate[28].distortion = true;
+          this.slate[28].color = "purple";
+          break;
+
+        case "5":
+          this.slate[9].distortion = true;
+          this.slate[9].color = "purple";
+          this.slate[16].distortion = true;
+          this.slate[16].color = "purple";
+          this.slate[19].distortion = true;
+          this.slate[19].color = "purple";
+          this.slate[26].distortion = true;
+          this.slate[26].color = "purple";
+          break;
+
+        default:
+          break;
+      }
+    }
   }
 
   fallback() {
@@ -256,9 +359,10 @@ class App extends Component {
       board: new board(6),
       inventory: inven,
       selectSpirit: null,
+      selectLevel: "1",
+      selectEquipment: "1",
     };
-    //this.state.board.setDistortion();
-    this.state.board.setBoard(0);
+    this.state.board.setBoard(this.state.selectEquipment);
   }
 
   // 지진 : 가로 1자
@@ -592,7 +696,7 @@ class App extends Component {
   }
 
   // specital
-  useSpecital(specital) {
+  useSpecital(specital, selectSpirit) {
     const board = this.state.board;
     const inventory = this.state.inventory;
     
@@ -613,7 +717,7 @@ class App extends Component {
         this.enhance();
         break;
       case 5:
-        this.reproduction();
+        this.reproduction(selectSpirit);
         break;
       default:
         break;
@@ -627,7 +731,7 @@ class App extends Component {
 
   bless() {
     const board = this.state.board;
-    board.left++;
+    board.count--;
     this.setState({ board });
   }
 
@@ -650,9 +754,9 @@ class App extends Component {
 
   }
 
-  reproduction() {
+  reproduction(selectSpirit) {
     const inventory = this.state.inventory;
-    inventory.reproduction();
+    inventory.reproduction(selectSpirit);
     this.setState({ inventory });
   }
   
@@ -726,7 +830,7 @@ class App extends Component {
     for (let i = 0; i < board.slate.length; i++) {
       board.slate[i].color = null;
       board.slate[i].probability = 0;
-      board.slate[i].hide = false;
+      board.slate[i].hide = true;
       board.slate[i].text = ".";
       if (board.slate[i].distortion)
         board.slate[i].color = "purple";
@@ -745,6 +849,9 @@ class App extends Component {
     let selectSpirit = this.state.selectSpirit;
     if (!selectSpirit)
       return;
+    inventory.useSpirit(inventory.selected);
+    inventory.appendHand(inventory.useIndex);
+
     for (let i = 0; i < board.slate.length; i++) {
       if (board.slate[i].probability > 0) {
         const randomNum = Math.floor((Math.random() * 99) + 1);
@@ -760,6 +867,9 @@ class App extends Component {
               board.slate[i].visibility = "hidden";
               board.destroyed.push(i);
               board.left--;
+              if (board.slate[i].specital !== null) {
+                this.useSpecital(board.slate[i].specital, selectSpirit);
+              }
             }
           }
         }
@@ -770,14 +880,10 @@ class App extends Component {
         }
       }
     }
-    if (board.slate[index].specital !== null) {
-      this.useSpecital(board.slate[index].specital, selectSpirit);
-    }
     board.count++;
     board.setSpecital();
     selectSpirit = null; 
     this.handleMouseOver(index);
-    inventory.useSpirit(inventory.selected);
     this.setState({ board, inventory, selectSpirit });
     this.checkFinish();
   }
@@ -818,6 +924,27 @@ class App extends Component {
     const board = this.state.board;
     if (board.left === 0)
       alert(board.count + "턴 소요하여 석판을 제거 하였습니다!");
+  }
+
+  refreshBoard() {
+    const board = this.state.board;
+    const inventory = this.state.inventory;
+    const selectEquipment = this.state.selectEquipment;
+    const selectLevel = this.state.selectLevel;
+
+    board.initBoard(6);
+    board.setBoard(selectEquipment);
+    board.setDistortion(selectEquipment, selectLevel);
+    inventory.initInventory();
+    this.setState({ board, inventory, selectSpirit: null });
+  }
+
+  selectLevelBoard = (e) => {
+    this.setState({ selectLevel: e.target.value });
+  }
+
+  selectEquipmentBoard = (e) => {
+    this.setState({ selectEquipment: e.target.value });
   }
 
   render() {
@@ -912,7 +1039,23 @@ class App extends Component {
     
     return (
       <div className="App">
-        <h1>test</h1>
+        <h1>초월 시뮬</h1>
+        {<select onChange={this.selectEquipmentBoard}>
+          <option value={1}>투구</option>
+          <option value={2}>견갑</option>
+          <option value={3}>상의</option>
+          <option value={4}>하의</option>
+          <option value={5}>장갑</option>
+        </select>}
+
+        {<select onChange={this.selectLevelBoard}>
+          <option value={1}>1 단계</option>
+          <option value={2}>2 단계</option>
+        </select>}
+
+        {<button onClick={() => this.refreshBoard()}>
+          새로고침
+        </button>}
         {/* <select onChange={this.handleSelect}>{spirit}</select> */}
         <div className="button-grid"
              style={{ margin: '30px'}}
