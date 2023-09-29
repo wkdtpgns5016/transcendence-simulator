@@ -25,6 +25,13 @@ const specital = [
   { type: 5, name: "복제"},
 ];
 
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
 class Square {
   constructor() {
     this.probability = 0;
@@ -36,6 +43,12 @@ class Square {
     this.distortion = false;
     this.text = ".";
   }
+
+  excludeSquare() {
+    this.visibility = "hidden";
+    this.activation = false;
+  }
+
 }
 
 class Spirit {
@@ -47,8 +60,9 @@ class Spirit {
 
   getString() {
     let str = this.name;
-    if (this.value === "eruption" && this.value === "resonance")
+    if (this.value === "eruption" || this.value === "resonance") {
       return (str);
+    }
     str += "[";
     for (let i = 0; i < this.level; i++) {
       str += "★";
@@ -182,7 +196,7 @@ class board {
     this.slate = squares;
     this.destroyed = [];
     this.left = level**2;
-    this.count = 1;
+    this.count = 0;
   }
 
   initBoard(level) {
@@ -195,7 +209,7 @@ class board {
     this.slate = squares;
     this.destroyed = [];
     this.left = level**2;
-    this.count = 1;
+    this.count = 0;
   }
 
   countLeftSlate() {
@@ -204,7 +218,7 @@ class board {
       if (this.slate[i].visibility !== "hidden" && this.slate[i].distortion === false)
         count++;
     }
-    return (count);
+    this.left = count;
   }
 
   // 머리 장갑 : 모서리 1개
@@ -221,33 +235,32 @@ class board {
 
     switch (flag) {
       case 0:
-        this.slate[0].visibility = "hidden";
-        this.slate[this.level - 1].visibility = "hidden";
-        this.slate[this.level * (this.level - 1)].visibility = "hidden";
-        this.slate[this.level * this.level - 1].visibility = "hidden";
+        this.slate[0].excludeSquare();
+        this.slate[this.level - 1].excludeSquare();
+        this.slate[this.level * (this.level - 1)].excludeSquare();
+        this.slate[this.level * this.level - 1].excludeSquare();
         break;
       case 1:
-        this.slate[0].visibility = "hidden";
-        this.slate[1].visibility = "hidden";
-        this.slate[this.level].visibility = "hidden";
+        this.slate[0].excludeSquare();
+        this.slate[1].excludeSquare();        
+        this.slate[this.level].excludeSquare();
 
-        this.slate[this.level - 2].visibility = "hidden";
-        this.slate[this.level - 1].visibility = "hidden";
-        this.slate[this.level + (this.level - 1)].visibility = "hidden";
+        this.slate[this.level - 2].excludeSquare();
+        this.slate[this.level - 1].excludeSquare();
+        this.slate[this.level + (this.level - 1)].excludeSquare();
 
-        this.slate[this.level * (this.level - 2)].visibility = "hidden";
-        this.slate[this.level * (this.level - 1)].visibility = "hidden";
-        this.slate[this.level * (this.level - 1) + 1].visibility = "hidden";
+        this.slate[this.level * (this.level - 2)].excludeSquare();
+        this.slate[this.level * (this.level - 1)].excludeSquare();
+        this.slate[this.level * (this.level - 1) + 1].excludeSquare();
 
 
-        this.slate[this.level * (this.level - 1) - 1].visibility = "hidden";
-        this.slate[this.level * this.level - 2].visibility = "hidden";
-        this.slate[this.level * this.level - 1].visibility = "hidden";
+        this.slate[this.level * (this.level - 1) - 1].excludeSquare();
+        this.slate[this.level * this.level - 2].excludeSquare();
+        this.slate[this.level * this.level - 1].excludeSquare();
         break;
       default:
         break;
     }
-    this.left = this.countLeftSlate();
   }
 
   setSpecital() {
@@ -333,6 +346,7 @@ class board {
   }
 
   fallback() {
+    shuffle(this.destroyed);
     this.destroyed.sort(() => Math.random() - 0.5);
     if (this.destroyed.length < 3) {
       while (this.destroyed.length !== 0) {
@@ -346,6 +360,22 @@ class board {
         let idx = this.destroyed.pop();
         this.slate[idx].visibility = "";
         this.left++;
+      }
+    }
+  }
+
+  shuffleBoard() {
+    let shuffleBoard = [];
+    for (let i = 0; i < this.slate.length - 1; i++) {
+      if (this.slate[i].activation)
+        shuffleBoard.push(this.slate[i]);
+    }
+    shuffle(shuffleBoard);
+    let j = 0;
+    for (let i = 0; i < this.slate.length - 1; i++) {
+      if (this.slate[i].activation) {
+        this.slate[i] = shuffleBoard[j];
+        j++;
       }
     }
   }
@@ -363,6 +393,99 @@ class App extends Component {
       selectEquipment: "1",
     };
     this.state.board.setBoard(this.state.selectEquipment);
+    this.state.board.countLeftSlate();
+  }
+
+  // 5회 이내 3성  5
+  // ...
+  // 1회 이내 3성  1
+  // 1회 이내 2성  0
+  // 2회 이내 1성  -2
+  // 0성         
+  getStringProgress() {
+    const board = this.state.board;
+    let rate = this.checkRating();
+    let str = "";
+    let n;
+
+    if (this.state.selectEquipment === "3")
+      n = 5 - board.count;
+    else 
+      n = 7 - board.count;
+
+    switch (rate) {
+      case 0:
+        str = "초월 성공 시 ☆☆☆ 달성"
+        break;
+      case 1:
+        n += 3;
+        str = n + "회 이내에 초월 성공 시 ★☆☆ 달성"
+        break;
+      case 2:
+        n = 1;
+        str = n + "회 이내에 초월 성공 시 ★★☆ 달성"
+        break;
+      case 3:
+        str = n + "회 이내에 초월 성공 시 ★★★ 달성"
+        break;
+      default:
+        break;
+    }
+    return (str);
+  }
+
+  checkRating() {
+    const board = this.state.board;
+
+    if (this.state.selectEquipment === "3") {
+      if (board.count < 5)
+        return 3;
+      else if (board.count < 6)
+        return 2;
+      else if (board.count < 8)
+        return 1;
+      else
+        return 0;
+    }
+    else {
+      if (board.count < 7)
+        return 3;
+      else if (board.count < 8)
+        return 2;
+      else if (board.count < 10)
+        return 1;
+      else
+        return 0;
+    }
+  }
+
+  getStringfinish() {
+    return ("초월 완료\n초월 등급 :  " + this.finishRating());
+  }
+
+  finishRating() {
+    const board = this.state.board;
+
+    if (this.state.selectEquipment === "3") {
+      if (board.count <= 5)
+        return "★★★";
+      else if (board.count <= 6)
+        return "★★☆";
+      else if (board.count <= 8)
+        return "★☆☆";
+      else
+        return "☆☆☆";
+    }
+    else {
+      if (board.count <= 7)
+        return "★★★";
+      else if (board.count <= 8)
+        return "★★☆";
+      else if (board.count <= 10)
+        return "★☆☆";
+      else
+        return "☆☆☆";
+    }
   }
 
   // 지진 : 가로 1자
@@ -726,7 +849,9 @@ class App extends Component {
   }
 
   reposition() {
-
+    const board = this.state.board;
+    board.shuffleBoard();
+    this.setState({ board });
   }
 
   bless() {
@@ -771,6 +896,11 @@ class App extends Component {
     if (board.slate[index].visibility === "hidden")
       return ;
     this.handleMouseOut();
+
+    if (selectSpirit.value !== "eruption" && selectSpirit.value !== "resonance" && selectSpirit.value !== "purification") {
+      if (board.slate[index].distortion)
+        return ;
+    }
     switch (spirit.value) {
       case options[0].value:
         this.earthquake(index, 15);
@@ -814,7 +944,12 @@ class App extends Component {
 
     for (let i = 0; i < board.slate.length; i++) {
       if (board.slate[i].distortion && board.slate[i].color === "yellow") {
-        board.slate[i].color = "brown";
+        if (selectSpirit.value === "lightning") {
+          board.slate[i].color = "purple";
+          board.slate[i].text = ".";
+        }
+        else
+          board.slate[i].color = "brown";
         if (selectSpirit.level === 3) {
           board.slate[i].probability = 0;
           board.slate[i].text = board.slate[i].probability.toString();
@@ -847,8 +982,15 @@ class App extends Component {
     const board = this.state.board;
     const inventory = this.state.inventory;
     let selectSpirit = this.state.selectSpirit;
+    let count = 0;
+
     if (!selectSpirit)
       return;
+
+    if (selectSpirit.value !== "eruption" && selectSpirit.value !== "resonance" && selectSpirit.value !== "purification") {
+      if (board.slate[index].distortion)
+        return ;
+    }
     inventory.useSpirit(inventory.selected);
     inventory.appendHand(inventory.useIndex);
 
@@ -859,8 +1001,8 @@ class App extends Component {
           if (board.slate[i].distortion) {
             if (selectSpirit.value === "purification" || selectSpirit.value === "resonance")
               board.slate[i].visibility = "hidden";
-            else
-              board.fallback();
+            else if (board.slate[i].visibility !== "hidden")
+              count++;
           }
           else {
             if (board.slate[i].visibility !== "hidden") {
@@ -879,6 +1021,10 @@ class App extends Component {
           board.slate[i].hide = true;
         }
       }
+    }
+    while (count !== 0) {
+      board.fallback();
+      count--;
     }
     board.count++;
     board.setSpecital();
@@ -910,20 +1056,20 @@ class App extends Component {
 
   handleChangeClick(index) {
     const inventory = this.state.inventory;
-    let selectSpirit = this.state.selectSpirit;
 
     inventory.changeHand(index);
     if (inventory.selected === index) {
       inventory.selected = null;
-      selectSpirit = null;
     }
-    this.setState({ inventory, selectSpirit });
+    this.setState({ inventory, selectSpirit: null });
   }
 
   checkFinish() {
     const board = this.state.board;
-    if (board.left === 0)
-      alert(board.count + "턴 소요하여 석판을 제거 하였습니다!");
+    if (board.left === 0) {
+      alert(this.getStringfinish());
+      this.refreshBoard();
+    }
   }
 
   refreshBoard() {
@@ -935,6 +1081,7 @@ class App extends Component {
     board.initBoard(6);
     board.setBoard(selectEquipment);
     board.setDistortion(selectEquipment, selectLevel);
+    board.countLeftSlate();
     inventory.initInventory();
     this.setState({ board, inventory, selectSpirit: null });
   }
@@ -959,9 +1106,9 @@ class App extends Component {
               key={index}
               className="grid-button"
               style={{  visibility: button.visibility, 
-                        fontSize: '20px', 
-                        width: '100px', 
-                        height: '100px', 
+                        fontSize: '15px', 
+                        width: '75px', 
+                        height: '75px', 
                         backgroundColor: button.color }}
               onMouseOver={() => this.handleMouseOver(i * this.state.board.level + index)}
               onMouseOut={() => this.handleMouseOut()}
@@ -991,7 +1138,8 @@ class App extends Component {
         <button
           key={i}
           className="change-button"
-          style={{  fontSize: '12px', 
+          style={{  margin: '15px',
+                    fontSize: '12px', 
                     width: '150px', 
                     height: '30px', 
                     backgroundColor: 'white'}}
@@ -1009,7 +1157,8 @@ class App extends Component {
         <button
           key={i}
           className="hand-button"
-          style={{  fontSize: '20px', 
+          style={{  margin: '15px',
+                    fontSize: '20px', 
                     width: '150px', 
                     height: '270px', 
                     backgroundColor: (this.state.inventory.selected === i ? "yellow":"white")  }}
@@ -1063,24 +1212,27 @@ class App extends Component {
           {rows}
         </div>
         <div>
-          <div style={{ fontSize: '15px'}}>
-            {this.state.board.count + "번째 턴 - 남은 석판의 개수 : " + this.state.board.left}
+          <div style={{ fontSize: '15px',
+                        paddingBottom: '15px'}}>
+            {this.getStringProgress()}
           </div>
+          <span style={{ margin: '15px',
+                         position: 'relative',
+                         top: '100px',
+                         right: '175px'}}>{pocket}</span>
+          <span style={{ margin: '15px', 
+                         position: 'relative',
+                         right: '128px'}}>{hand}</span>
           <div>
-            <span style={{ margin: '0 auto'}}>{hand}</span>
-          </div>
-          <div>
-            <span style={{margin: '0 auto'}}>
+            <span style={{position: 'relative',
+                         bottom: '30px'}}>
                 {change}
             </span>
           </div>
           <div>
-            <span style={{margin: '0 auto'}}>
-                {"남은 교체 횟수 : " + this.state.inventory.change}
+            <span>
+                {"남은 정령교체 횟수 : " + this.state.inventory.change}
             </span>
-          </div>
-          <div style={{margin: '30px'}}>
-            <span style={{ float: 'left'}}>{pocket}</span>
           </div>
         </div>
       </div>
