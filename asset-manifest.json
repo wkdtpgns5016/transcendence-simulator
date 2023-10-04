@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/transcendence-simulator/static/css/main.073c9b0a.css",
+    "main.js": "/transcendence-simulator/static/js/main.86368716.js",
+    "static/js/787.4ada5133.chunk.js": "/transcendence-simulator/static/js/787.4ada5133.chunk.js",
+    "index.html": "/transcendence-simulator/index.html",
+    "main.073c9b0a.css.map": "/transcendence-simulator/static/css/main.073c9b0a.css.map",
+    "main.86368716.js.map": "/transcendence-simulator/static/js/main.86368716.js.map",
+    "787.4ada5133.chunk.js.map": "/transcendence-simulator/static/js/787.4ada5133.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.073c9b0a.css",
+    "static/js/main.86368716.js"
+  ]
+}
