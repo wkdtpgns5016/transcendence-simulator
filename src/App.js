@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 
+// 정령 효과 데이터 초기화
 const options = [
   { value: "earthquake", label: "지진"},
   { value: "stom", label: "폭풍우"},
@@ -16,6 +17,7 @@ const options = [
   { value: "resonance", label: "세계수의 공명"},
 ];
 
+// 특수 장판 데이터 초기화
 const specital = [ 
   { type: 0, name: "재배치"},
   { type: 1, name: "축복"},
@@ -24,6 +26,22 @@ const specital = [
   { type: 4, name: "강화"},
   { type: 5, name: "복제"},
 ];
+
+// 초월 단계 별 장판 데이터 초기화
+const level_data = new Map();
+level_data.set("2",[{ etype: "1", location: [7, 14, 21, 28] }, 
+                    { etype: "2", location: [10, 15, 20, 25] }, 
+                    { etype: "3", location: [14, 15, 20, 21] }, 
+                    { etype: "4", location: [7, 8, 27, 28] }, 
+                    { etype: "5", location: [9, 16, 19, 26] }]);
+level_data.set("3",[{ etype: "1", location: [7, 10, 25, 28] }, 
+                    { etype: "2", location: [7, 10, 25, 28] }, 
+                    { etype: "3", location: [8, 16, 19, 27] }, 
+                    { etype: "4", location: [7, 15, 20, 28] }, 
+                    { etype: "5", location: [7, 9, 26, 28] }]);
+
+// 장비 부위 별 장판 데이터 초기화
+const e_data = [[0, 5, 30, 35], [0, 1, 4, 5, 6, 11, 24, 29, 30 ,31, 34, 35]];
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -49,6 +67,17 @@ class Square {
     this.activation = false;
   }
 
+  setDistortion() {
+    this.distortion = true;
+    this.color = "purple";
+  }
+
+  setSpirit(probability) {
+    this.color = "yellow";
+    this.probability = probability;
+    this.hide = false;
+    this.text = probability.toString();
+  }
 }
 
 class Spirit {
@@ -197,6 +226,7 @@ class board {
     this.destroyed = [];
     this.left = level**2;
     this.count = 0;
+    this.lightningPenalty = false;
   }
 
   initBoard(level) {
@@ -210,6 +240,7 @@ class board {
     this.destroyed = [];
     this.left = level**2;
     this.count = 0;
+    this.lightningPenalty = false;
   }
 
   countLeftSlate() {
@@ -226,40 +257,13 @@ class board {
   // 견갑 하의 : 풀
   setBoard(selectEquipment) {
     let flag = 0;
-    if (selectEquipment === "3") {
+
+    if (selectEquipment === "3")
       flag = 1;
-    }
-    else if (selectEquipment === "2" || selectEquipment === "4") {
-      flag = 3;
-    }
-
-    switch (flag) {
-      case 0:
-        this.slate[0].excludeSquare();
-        this.slate[this.level - 1].excludeSquare();
-        this.slate[this.level * (this.level - 1)].excludeSquare();
-        this.slate[this.level * this.level - 1].excludeSquare();
-        break;
-      case 1:
-        this.slate[0].excludeSquare();
-        this.slate[1].excludeSquare();        
-        this.slate[this.level].excludeSquare();
-
-        this.slate[this.level - 2].excludeSquare();
-        this.slate[this.level - 1].excludeSquare();
-        this.slate[this.level + (this.level - 1)].excludeSquare();
-
-        this.slate[this.level * (this.level - 2)].excludeSquare();
-        this.slate[this.level * (this.level - 1)].excludeSquare();
-        this.slate[this.level * (this.level - 1) + 1].excludeSquare();
-
-
-        this.slate[this.level * (this.level - 1) - 1].excludeSquare();
-        this.slate[this.level * this.level - 2].excludeSquare();
-        this.slate[this.level * this.level - 1].excludeSquare();
-        break;
-      default:
-        break;
+    else if (selectEquipment === "2" || selectEquipment === "4")
+      return;
+    for (let i = 0; i < e_data[flag].length; i++) {
+      this.slate[e_data[flag][i]].excludeSquare();
     }
   }
 
@@ -282,84 +286,36 @@ class board {
   }
 
   setDistortion(selectEquipment, selectLevel) {
-    if (selectLevel === "2") {
-      switch (selectEquipment) {
-        case "1":
-          this.slate[7].distortion = true;
-          this.slate[7].color = "purple";
-          this.slate[14].distortion = true;
-          this.slate[14].color = "purple";
-          this.slate[21].distortion = true;
-          this.slate[21].color = "purple";
-          this.slate[28].distortion = true;
-          this.slate[28].color = "purple";
-          break;
-
-        case "2":
-          this.slate[10].distortion = true;
-          this.slate[10].color = "purple";
-          this.slate[15].distortion = true;
-          this.slate[15].color = "purple";
-          this.slate[20].distortion = true;
-          this.slate[20].color = "purple";
-          this.slate[25].distortion = true;
-          this.slate[25].color = "purple";
-          break;
-
-        case "3":
-          this.slate[14].distortion = true;
-          this.slate[14].color = "purple";
-          this.slate[15].distortion = true;
-          this.slate[15].color = "purple";
-          this.slate[20].distortion = true;
-          this.slate[20].color = "purple";
-          this.slate[21].distortion = true;
-          this.slate[21].color = "purple";
-          break;
-
-        case "4":
-          this.slate[7].distortion = true;
-          this.slate[7].color = "purple";
-          this.slate[8].distortion = true;
-          this.slate[8].color = "purple";
-          this.slate[27].distortion = true;
-          this.slate[27].color = "purple";
-          this.slate[28].distortion = true;
-          this.slate[28].color = "purple";
-          break;
-
-        case "5":
-          this.slate[9].distortion = true;
-          this.slate[9].color = "purple";
-          this.slate[16].distortion = true;
-          this.slate[16].color = "purple";
-          this.slate[19].distortion = true;
-          this.slate[19].color = "purple";
-          this.slate[26].distortion = true;
-          this.slate[26].color = "purple";
-          break;
-
-        default:
-          break;
-      }
+    const data = level_data.get(selectLevel);
+    if (data === undefined)
+      return ;
+    const info = data.find((element) => element.etype === selectEquipment);
+    if (info === undefined)
+      return;
+    for (let i = 0; i < info.location.length; i++) {
+      this.slate[info.location[i]].setDistortion();
     }
   }
 
-  fallback() {
-    shuffle(this.destroyed);
-    this.destroyed.sort(() => Math.random() - 0.5);
+  recoverSlate() {
+    let idx = this.destroyed.splice(Math.floor(Math.random() * this.destroyed.length),1)[0];
+    this.slate[idx].visibility = "";
+    this.left++;
+  }
+
+  processLightningPenalty() {
+    this.recoverSlate();
+  }
+
+  processDestroyPenalty() {
     if (this.destroyed.length < 3) {
       while (this.destroyed.length !== 0) {
-        let idx = this.destroyed.pop();
-        this.slate[idx].visibility = "";
-        this.left++;
+        this.recoverSlate();
       }
     }
     else {
       for (let i = 0; i < 3; i++) {
-        let idx = this.destroyed.pop();
-        this.slate[idx].visibility = "";
-        this.left++;
+        this.recoverSlate();
       }
     }
   }
@@ -396,12 +352,6 @@ class App extends Component {
     this.state.board.countLeftSlate();
   }
 
-  // 5회 이내 3성  5
-  // ...
-  // 1회 이내 3성  1
-  // 1회 이내 2성  0
-  // 2회 이내 1성  -2
-  // 0성         
   getStringProgress() {
     const board = this.state.board;
     let rate = this.checkRating();
@@ -499,10 +449,7 @@ class App extends Component {
       probability = 0;
     for (let i = 0; i < size; i++) {
       let diff = Math.abs(index - (line * size + i));
-      board.slate[line * size + i].color = "yellow";
-      board.slate[line * size + i].probability = 100 - (probability * diff);
-      board.slate[line * size + i].hide = false;
-      board.slate[line * size + i].text = board.slate[line * size + i].probability.toString();
+      board.slate[line * size + i].setSpirit(100 - (probability * diff));
     }
     this.setState({ board });
   }
@@ -519,10 +466,7 @@ class App extends Component {
       probability = 0;
     for (let i = 0; i < size; i++) {
       let diff = Math.abs(line - i);
-      board.slate[i * size + row].color = "yellow";
-      board.slate[i * size + row].probability = 100 - (probability * diff);
-      board.slate[i * size + row].hide = false;
-      board.slate[i * size + row].text = board.slate[i * size + row].probability.toString();
+      board.slate[i * size + row].setSpirit(100 - (probability * diff));
     }
     this.setState({ board });
   }
@@ -530,11 +474,7 @@ class App extends Component {
   // 분출 : 선택 1칸
   eruption(index) {
     const board = this.state.board;
-    board.slate[index].color = "yellow";
-    board.slate[index].probability = 100;
-    board.slate[index].hide = false;
-    board.slate[index].text = board.slate[index].probability.toString();
-
+    board.slate[index].setSpirit(100);
     this.setState({ board });
   }
   
@@ -558,10 +498,7 @@ class App extends Component {
         if (!(index % size === 0 && idx % size === size - 1) &&
           !(index % size === size - 1 && idx % size === 0))
         {
-          board.slate[idx].color = "yellow";
-          board.slate[idx].probability = (idx === index ? 100 : probability);
-          board.slate[idx].hide = false;
-          board.slate[idx].text = board.slate[idx].probability.toString();
+          board.slate[idx].setSpirit((idx === index ? 100 : probability));
         }
       }
     }
@@ -597,10 +534,7 @@ class App extends Component {
         if (!(index % size === 0 && idx % size === size - 1) &&
           !(index % size === size - 1 && idx % size === 0))
         {
-          board.slate[idx].color = "yellow";
-          board.slate[idx].probability = (idx === index ? 100 : probability);
-          board.slate[idx].hide = false;
-          board.slate[idx].text = board.slate[idx].probability.toString();
+          board.slate[idx].setSpirit((idx === index ? 100 : probability));
         }
       }
     }
@@ -625,10 +559,7 @@ class App extends Component {
       let idx = i * size + row_idx;
       if (idx >= 0 && idx < board.slate.length)
       {
-        board.slate[idx].color = "yellow";
-        board.slate[idx].probability = 100 - (probability * Math.abs(diff));
-        board.slate[idx].hide = false;
-        board.slate[idx].text = board.slate[idx].probability.toString();
+        board.slate[idx].setSpirit(100 - (probability * Math.abs(diff)));
       }
     }
     this.setState({ board });
@@ -656,10 +587,7 @@ class App extends Component {
       if ((row_idx < 0 || row_idx > size - 1) || (line_idx < 0 || line_idx > size - 1))
         continue;
       let idx = line_idx * size + row_idx;
-      board.slate[idx].color = "yellow";
-      board.slate[idx].probability = (idx === index ? 100 : probability);
-      board.slate[idx].hide = false;
-      board.slate[idx].text = board.slate[idx].probability.toString();
+      board.slate[idx].setSpirit((idx === index ? 100 : probability));
     }
     this.setState({ board });
   }
@@ -680,69 +608,54 @@ class App extends Component {
       if ((row_idx < 0 || row_idx > size - 1) || (line_idx < 0 || line_idx > size - 1))
         continue;
       let idx = line_idx * size + row_idx;
-      board.slate[idx].color = "yellow";
-      board.slate[idx].probability = (idx === index ? 100 : probability);
-      board.slate[idx].hide = false;
-      board.slate[idx].text = board.slate[idx].probability.toString();
+      board.slate[idx].setSpirit((idx === index ? 100 : probability));
     }
     this.setState({ board });
   }
 
-  countLightning(level, index) {
+  strikeLightning(level, index) {
     const board = this.state.board;
-    const randomNum = Math.floor((Math.random() * 99) + 1);
-    const probability = 50;
-    const num = probability / (level * 2);
-    const randomIndex = [];
     const boardIndex = [];
-    let count = 0;
+    const randomIndex = [];
+    const result = { penalty: false, struck: null };
+    let count = Math.floor(Math.random() * (level * 2 + 1));
     let penalty = 1;
 
-    for (let i = 0; i < level * 2 + 1; i++) {
-      if (randomNum <= probability - (num * i))
-        count++;
-    }
-
     for (let i = 0; i < board.slate.length; i++) {
-      if (board.slate[i].visibility === "hidden" && board.destroyed.find((j) => i === j) === undefined) {
+      if (board.slate[i].activation === false || board.slate[i].distortion || i === index)
         continue;
-      }
       boardIndex.push(i);
     }
-
     while (count > 0) {
+      if (boardIndex.length === 0)
+        break;
       let idx = boardIndex.splice(Math.floor(Math.random() * boardIndex.length),1)[0];
       if (board.destroyed.find((i) => i === idx) !== undefined) {
         if (penalty > 0) {
-          randomIndex.push(idx);
+          result.penalty = true;
           count--;
           penalty--;
         }
       }
       else {
-        if (board.slate[idx].distortion)
-          continue;
-        if (idx !== index) {
           randomIndex.push(idx);
           count--;
-        }
       }
     }
-    return (randomIndex);
+    result.struck = randomIndex;
+    return (result);
   }
 
   // 벼락 : 레벨당 임의 2개 추가
   lightning(index) {
     const board = this.state.board;
     const selectSpirit = this.state.selectSpirit;
-    const randomIndex = this.countLightning(selectSpirit.level, index);
-    for (let i = 0; i < randomIndex.length; i++) {
-      if (board.destroyed.find((j) => j === randomIndex[i]) !== undefined) {
-        board.slate[randomIndex[i]].probability = -100;
-      }
-      else {
-        board.slate[randomIndex[i]].probability = 100;
-      }
+    const result = this.strikeLightning(selectSpirit.level, index);
+    const struck = result.struck;
+
+    board.lightningPenalty = result.penalty;
+    for (let i = 0; i < struck.length; i++) {
+        board.slate[struck[i]].probability = 40 + (selectSpirit.level * 15);
     }
 
     for (let i = 0; i < board.slate.length; i++) {
@@ -776,10 +689,7 @@ class App extends Component {
       if ((row_idx < 0 || row_idx > size - 1))
         continue;
       let idx = line * size + row_idx;
-      board.slate[idx].color = "yellow";
-      board.slate[idx].probability = (idx === index ? 100 : probability);
-      board.slate[idx].hide = false;
-      board.slate[idx].text = board.slate[idx].probability.toString();
+      board.slate[idx].setSpirit((idx === index ? 100 : probability));
     }
     this.setState({ board });
   }
@@ -797,10 +707,7 @@ class App extends Component {
         continue;
       }
       let idx = line * size + row_idx;
-      board.slate[idx].color = "yellow";
-      board.slate[idx].probability = 100;
-      board.slate[idx].hide = false;
-      board.slate[idx].text = board.slate[idx].probability.toString();
+      board.slate[idx].setSpirit(100);
     }
 
     for (let i = 0; i < 5; i++) {
@@ -809,10 +716,7 @@ class App extends Component {
         continue;
       }
       let idx = line_idx * size + row;
-      board.slate[idx].color = "yellow";
-      board.slate[idx].probability = 100;
-      board.slate[idx].hide = false;
-      board.slate[idx].text = board.slate[idx].probability.toString();
+      board.slate[idx].setSpirit(100);
     }
     
     this.setState({ board });
@@ -972,9 +876,9 @@ class App extends Component {
       if (board.slate[i].specital !== null) {
         board.slate[i].color = "green";
         board.slate[i].text = board.slate[i].specital.name;
-
       }
     }
+    board.lightningPenalty = false;
     this.setState({ board });
   }
 
@@ -1022,8 +926,16 @@ class App extends Component {
         }
       }
     }
+
+    // 석판 복구 로직
+    // 벼락 재생성
+    if (board.lightningPenalty) {
+      board.processLightningPenalty();
+      board.lightningPenalty = false;
+    }
+    // 왜곡된 장판 효과
     while (count !== 0) {
-      board.fallback();
+      board.processDestroyPenalty();
       count--;
     }
     board.count++;
@@ -1033,11 +945,6 @@ class App extends Component {
     this.setState({ board, inventory, selectSpirit });
     this.checkFinish();
   }
-
-  // handleSelect = (e) => {
-  //   this.handleMouseOut();
-  //   this.setState({ selectSpirit: e.target.value })
-  // };
 
   handleSpiritClick(index) {
     const inventory = this.state.inventory;
@@ -1119,18 +1026,6 @@ class App extends Component {
       );
     }
 
-    // //정령효과
-    // let spirit = [];
-    // spirit.push(
-    //   options.map((option) => (
-    //     <option
-    //       key={option.value}
-    //       value={option.value}
-    //     >
-    //       {option.label}
-    //     </option>
-    //   )));
-
     // 정령교체 버튼
     const change = [];
     for (let i = 0; i < 2; i++) {
@@ -1188,7 +1083,7 @@ class App extends Component {
     
     return (
       <div className="App">
-        <h1>초월 시뮬</h1>
+        <h1>초월 시뮬레이터</h1>
         {<select onChange={this.selectEquipmentBoard}>
           <option value={1}>투구</option>
           <option value={2}>견갑</option>
@@ -1200,12 +1095,12 @@ class App extends Component {
         {<select onChange={this.selectLevelBoard}>
           <option value={1}>1 단계</option>
           <option value={2}>2 단계</option>
+          <option value={3}>3 단계</option>
         </select>}
 
         {<button onClick={() => this.refreshBoard()}>
           새로고침
         </button>}
-        {/* <select onChange={this.handleSelect}>{spirit}</select> */}
         <div className="button-grid"
              style={{ margin: '30px'}}
         >
