@@ -691,6 +691,14 @@ class App extends Component {
       let idx = line * size + row_idx;
       board.slate[idx].setSpirit((idx === index ? 100 : probability));
     }
+    if (selectSpirit.level === 3) {
+      for (let i = 0; i < 2; i++) {
+        let idx = index - 6 + (i * 12);
+        if (idx < 0 || idx > 35)
+          continue;
+        board.slate[idx].setSpirit(probability);
+      }
+    }
     this.setState({ board });
   }
 
