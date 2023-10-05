@@ -862,7 +862,7 @@ class App extends Component {
         }
         else
           board.slate[i].color = "brown";
-        if (selectSpirit.level === 3) {
+        if (selectSpirit.level === 3 && selectSpirit.value !== "purification") {
           board.slate[i].probability = 0;
           board.slate[i].text = board.slate[i].probability.toString();
         }
