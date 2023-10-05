@@ -1,4 +1,6 @@
 # 로스트아크 장비 초월 시뮬레이터
+!["ⓒSmilegate RPG All rights reserved."](./docs/image/maxresdefault.jpeg)
+이미지 저작권 _ⓒ2023.Smilegate RPG.All rights reserved._
 ## 개요
 로스트아크 장비 초월 시뮬레이터 (크롬 권장) </br>
 링크: https://wkdtpgns5016.github.io/transcendence-simulator/ </br>
@@ -37,7 +39,7 @@
 &emsp;분출 등장 확률: **50%** </br>
 &emsp;세계수의 공명 등장 확률: **50%**
 
-## 현황
+## 업데이트 현황
 > 2023-10-05: 초월 3단계 장판 추가 </br>
 > 2023-10-05: 장판 및 정령 효과 이미지 및 디자인 구성 중 </br>
-> 2023-10-05: <~~정령효과 정화 3단계 수정 필요~~> 수정완료 </br>
+> 2023-10-05: ~~정령효과 정화 3단계 수정 필요~~ 수정완료 </br>
