@@ -2,7 +2,7 @@
 !["ⓒSmilegate RPG All rights reserved."](./docs/image/maxresdefault.jpeg)
 이미지 저작권 _ⓒ2023.Smilegate RPG.All rights reserved._
 ## 개요
-로스트아크 장비 초월 시뮬레이터 (크롬 권장) </br>
+로스트아크 장비 초월 시뮬레이터 pc버전 (크롬 권장) [모바일 지원 x] </br>
 링크: https://wkdtpgns5016.github.io/transcendence-simulator/ </br>
 
 로스트아크 공식 게임가이드를 참고하여 제작하였습니다. </br>
