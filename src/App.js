@@ -19,16 +19,11 @@ const options = [
 
 // 특수 장판 데이터 초기화
 const specital = [ 
-  // { type: 0, name: "재배치"},
-  // { type: 1, name: "축복"},
-  // { type: 2, name: "추가"},
-  // { type: 3, name: "신비"},
-  // { type: 4, name: "강화"},
-  { type: 5, name: "복제"},
-  { type: 5, name: "복제"},
-  { type: 5, name: "복제"},
-  { type: 5, name: "복제"},
-  { type: 5, name: "복제"},
+  { type: 0, name: "재배치"},
+  { type: 1, name: "축복"},
+  { type: 2, name: "추가"},
+  { type: 3, name: "신비"},
+  { type: 4, name: "강화"},
   { type: 5, name: "복제"},
 ];
 
