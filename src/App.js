@@ -146,7 +146,6 @@ class inventory {
 
   useSpirit(index) {
     let spirit = this.hand[index];
-    this.hand[index] = null;
     this.useIndex = index;
     this.selected = null;
     return (spirit);
