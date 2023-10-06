@@ -19,13 +19,22 @@ const options = [
 
 // 특수 장판 데이터 초기화
 const specital = [ 
-  { type: 0, name: "재배치"},
-  { type: 1, name: "축복"},
-  { type: 2, name: "추가"},
-  { type: 3, name: "신비"},
   { type: 4, name: "강화"},
-  { type: 5, name: "복제"},
+  { type: 4, name: "강화"},
+  { type: 4, name: "강화"},
+  { type: 4, name: "강화"},
+  { type: 4, name: "강화"},
+  { type: 4, name: "강화"},
 ];
+
+// const specital = [ 
+//   { type: 0, name: "재배치"},
+//   { type: 1, name: "축복"},
+//   { type: 2, name: "추가"},
+//   { type: 3, name: "신비"},
+//   { type: 4, name: "강화"},
+//   { type: 5, name: "복제"},
+// ];
 
 // 초월 단계 별 장판 데이터 초기화
 const level_data = new Map();
@@ -145,16 +154,9 @@ class inventory {
   }
 
   useSpirit(index) {
-    let spirit = null;
-    if (index === 0) {
-      spirit = this.hand[0];
-      this.useIndex = 0;
-    }
-    else {
-      spirit = this.hand[1];
-      this.useIndex = 1;
-    }
-
+    let spirit = this.hand[index];
+    this.hand[index] = null;
+    this.useIndex = index;
     this.selected = null;
     return (spirit);
   }
@@ -168,10 +170,15 @@ class inventory {
 
   levelUpSpirit() {
     if (this.hand[0].value === this.hand[1].value) {
-      if (this.hand[0].level < 3 && this.hand[0].value !== "eruption" && this.hand[0].value !== "resonance") {
-        this.hand[0].level++;
-        this.appendHand(1);
-        this.levelUpSpirit();
+      if (this.hand[0].value !== "eruption" && this.hand[0].value !== "resonance") {
+        if (this.hand[0].level < 3 && this.hand[1].level < 3) {
+          if (this.hand[0].level > this.hand[1].level)
+            this.hand[0].level++;
+          else
+            this.hand[0].level = this.hand[1].level + 1;
+          this.appendHand(1);
+          this.levelUpSpirit();
+        }
       }
     }
   }
@@ -652,7 +659,6 @@ class App extends Component {
     const randomIndex = [];
     const result = { penalty: false, struck: null };
     let count = Math.floor(Math.random() * (level * 2 + 2)) - 1;
-    console.log(count);
 
     for (let i = 0; i < board.slate.length; i++) {
       if (index === i)
@@ -930,8 +936,8 @@ class App extends Component {
       if (board.slate[index].distortion)
         return ;
     }
+    
     inventory.useSpirit(inventory.selected);
-    inventory.appendHand(inventory.useIndex);
 
     for (let i = 0; i < board.slate.length; i++) {
       if (board.slate[i].probability > 0) {
@@ -962,6 +968,7 @@ class App extends Component {
       }
     }
 
+    inventory.appendHand(inventory.useIndex);
     // 석판 복구 로직
     // 벼락 재생성
     if (board.lightningPenalty) {
