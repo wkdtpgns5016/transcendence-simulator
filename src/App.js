@@ -613,39 +613,65 @@ class App extends Component {
     this.setState({ board });
   }
 
-  strikeLightning(level, index) {
+  // 초기 벼락 알고리즘
+  // strikeLightning(level, index) {
+  //   const board = this.state.board;
+  //   const boardIndex = [];
+  //   const randomIndex = [];
+  //   const result = { penalty: false, struck: null };
+  //   let count = Math.floor(Math.random() * (level * 2 + 1));
+  //   let penalty = 1;
+
+  //   for (let i = 0; i < board.slate.length; i++) {
+  //     if (board.slate[i].activation === false || board.slate[i].distortion || i === index)
+  //       continue;
+  //     boardIndex.push(i);
+  //   }
+  //   while (count > 0) {
+  //     if (boardIndex.length === 0)
+  //       break;
+  //     let idx = boardIndex.splice(Math.floor(Math.random() * boardIndex.length),1)[0];
+  //     if (board.destroyed.find((i) => i === idx) !== undefined) {
+  //       if (penalty > 0) {
+  //         result.penalty = true;
+  //         count--;
+  //         penalty--;
+  //       }
+  //     }
+  //     else {
+  //         randomIndex.push(idx);
+  //         count--;
+  //     }
+  //   }
+  //   result.struck = randomIndex;
+  //   return (result);
+  // }
+  strikeLightning(level, index) { 
     const board = this.state.board;
     const boardIndex = [];
     const randomIndex = [];
     const result = { penalty: false, struck: null };
-    let count = Math.floor(Math.random() * (level * 2 + 1));
-    let penalty = 1;
+    let count = Math.floor(Math.random() * (level * 2 + 2)) - 1;
+    console.log(count);
 
     for (let i = 0; i < board.slate.length; i++) {
-      if (board.slate[i].activation === false || board.slate[i].distortion || i === index)
+      if (index === i)
         continue;
-      boardIndex.push(i);
+      if (board.slate[i].visibility !== "hidden" && !board.slate[i].distortion)
+        boardIndex.push(i);
     }
+    if (count < 0)
+      result.penalty = true;
     while (count > 0) {
       if (boardIndex.length === 0)
         break;
       let idx = boardIndex.splice(Math.floor(Math.random() * boardIndex.length),1)[0];
-      if (board.destroyed.find((i) => i === idx) !== undefined) {
-        if (penalty > 0) {
-          result.penalty = true;
-          count--;
-          penalty--;
-        }
-      }
-      else {
-          randomIndex.push(idx);
-          count--;
-      }
+      randomIndex.push(idx);
+      count--;
     }
     result.struck = randomIndex;
     return (result);
   }
-
   // 벼락 : 레벨당 임의 2개 추가
   lightning(index) {
     const board = this.state.board;
@@ -655,7 +681,7 @@ class App extends Component {
 
     board.lightningPenalty = result.penalty;
     for (let i = 0; i < struck.length; i++) {
-        board.slate[struck[i]].probability = 40 + (selectSpirit.level * 15);
+        board.slate[struck[i]].probability = 100;
     }
 
     for (let i = 0; i < board.slate.length; i++) {
@@ -859,6 +885,7 @@ class App extends Component {
         if (selectSpirit.value === "lightning") {
           board.slate[i].color = "purple";
           board.slate[i].text = ".";
+          continue;
         }
         else
           board.slate[i].color = "brown";
