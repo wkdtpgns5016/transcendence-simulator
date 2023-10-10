@@ -1,5 +1,20 @@
 import React, { Component } from 'react';
+import { useMediaQuery } from 'react-responsive';
 import './App.css';
+
+export const Mobile = ({ children }) => {
+  const isMobile = useMediaQuery({
+    query: "(max-width:768px)"
+  });
+  return <>{isMobile && children}</>
+}
+
+export const Pc = ({ children }) => {
+  const isPc = useMediaQuery({
+    query: "(min-width:769px)"
+  });
+  return <>{isPc && children}</>
+}
 
 // 정령 효과 데이터 초기화
 const options = [
@@ -113,6 +128,7 @@ class inventory {
     this.saveUse = null;
   }
 
+  // 인벤토리 초기화
   initInventory() {
     delete this.poket;
     delete this.hand;
@@ -127,6 +143,7 @@ class inventory {
     this.saveUse = null;
   }
 
+  // 정령효과 변경
   changeHand(index) {
     if (this.change > 0) {
       this.hand[index] = this.poket.shift();
@@ -137,6 +154,7 @@ class inventory {
     }
   }
 
+  // 정령효과 채워넣기
   appendHand(index) {
     this.hand[index] = this.poket.shift();
     this.poket.push(this.createSpirit());
@@ -144,6 +162,7 @@ class inventory {
     this.selected = null;
   }
 
+  // 정령효과 사용
   useSpirit(index) {
     let spirit = this.hand[index];
     this.useIndex = index;
@@ -151,6 +170,7 @@ class inventory {
     return (spirit);
   }
 
+  // 랜덤 정령 객체 생성
   createSpirit() {
     let randomNum = Math.floor(Math.random() * 10);
     let obj = options[randomNum];
@@ -158,6 +178,7 @@ class inventory {
     return spirit;
   }
 
+  // 정령 등급업
   levelUpSpirit() {
     if (this.hand[0].value === this.hand[1].value) {
       if (this.hand[0].value !== "eruption" && this.hand[0].value !== "resonance") {
@@ -173,6 +194,7 @@ class inventory {
     }
   }
 
+  // 신비
   mystery() {
     let leftIdx = (this.useIndex === 0 ? 1 : 0);
     let randomNum = Math.floor(Math.random() * 2);
@@ -184,6 +206,7 @@ class inventory {
     }
   }
 
+  // 강화
   enhance() {
     let leftIdx = (this.useIndex === 0 ? 1 : 0);
     if (this.hand[leftIdx].value !== "eruption" && this.hand[leftIdx].value !== "resonance") {
@@ -193,20 +216,10 @@ class inventory {
     }
   }
 
+  // 복제
   reproduction(selectSpirit) {
     let leftIdx = (this.useIndex === 0 ? 1 : 0);
     this.hand[leftIdx] = selectSpirit;
-  }
-
-  getHandString() {
-    return ("{ " + this.hand[0].getString() + ", " + 
-                   this.hand[1].getString() + " }");
-  }
-  
-  getPocketString() {
-    return ("{ " + this.poket[0].getString() + ", " +
-                   this.poket[1].getString() + ", " +
-                   this.poket[2].getString() + " }");
   }
 
 }
@@ -225,8 +238,8 @@ class board {
     this.lightningPenalty = false;
   }
 
+  // 객체 초기화
   initBoard(level) {
-
     let squares = [];
     for (let i=0; i<level**2; i++) {
       squares[i] = new Square();
@@ -239,6 +252,7 @@ class board {
     this.lightningPenalty = false;
   }
 
+  // 석판 개수 카운트
   countLeftSlate() {
     let count = 0;
     for (let i = 0; i < this.level**2; i++) {
@@ -263,6 +277,7 @@ class board {
     }
   }
 
+  // 특수 효과 설정
   setSpecital() {
     let randomNum = Math.floor(Math.random() * 6);
     let randomIndex = [];
@@ -281,6 +296,7 @@ class board {
     this.slate[randomIndex[idx]].text = specital[randomNum].name;
   }
 
+  // 왜곡 장판 설정
   setDistortion(selectEquipment, selectLevel) {
     const data = level_data.get(selectLevel);
     if (data === undefined)
@@ -293,16 +309,19 @@ class board {
     }
   }
 
+  // 석판 회복
   recoverSlate() {
     let idx = this.destroyed.splice(Math.floor(Math.random() * this.destroyed.length),1)[0];
     this.slate[idx].visibility = "";
     this.left++;
   }
 
+  // 벼락 효과 패널티 적용
   processLightningPenalty() {
     this.recoverSlate();
   }
 
+  // 왜곡 장판 패널티 적용
   processDestroyPenalty() {
     if (this.destroyed.length < 3) {
       while (this.destroyed.length !== 0) {
@@ -316,6 +335,7 @@ class board {
     }
   }
 
+  // 석판 재배치
   shuffleBoard() {
     let shuffleBoard = [];
     for (let i = 0; i < this.slate.length - 1; i++) {
@@ -822,9 +842,8 @@ class App extends Component {
   handleMouseOver(index) {
     const board = this.state.board;
     const selectSpirit = this.state.selectSpirit;
-    const spirit = this.state.selectSpirit;
 
-    if (!spirit)
+    if (!selectSpirit)
       return;
     if (board.slate[index].visibility === "hidden")
       return ;
@@ -834,7 +853,7 @@ class App extends Component {
       if (board.slate[index].distortion)
         return ;
     }
-    switch (spirit.value) {
+    switch (selectSpirit.value) {
       case options[0].value:
         this.earthquake(index, 15);
         break;
@@ -1056,6 +1075,28 @@ class App extends Component {
         </div>
       );
     }
+    const rows2 = [];
+    for (let i = 0; i < this.state.board.level; i++) {
+      const rowButtons = this.state.board.slate.slice(i * this.state.board.level, (i + 1) * this.state.board.level);
+      rows2.push(
+        <div key={i} className="button-row">
+          {rowButtons.map((button, index) => (
+            <button
+              key={index}
+              className="grid-button"
+              style={{  visibility: button.visibility, 
+                        fontSize: '10px', 
+                        width: '50px', 
+                        height: '50px', 
+                        backgroundColor: button.color }}
+              onMouseOver={() => this.handleMouseOver(i * this.state.board.level + index)}
+              onMouseOut={() => this.handleMouseOut()}
+              onClick={() => this.handleBoardClick(i * this.state.board.level + index)}
+            >{button.text}</button>
+          ))}
+        </div>
+      );
+    }
 
     // 정령교체 버튼
     const change = [];
@@ -1068,6 +1109,23 @@ class App extends Component {
                     fontSize: '12px', 
                     width: '150px', 
                     height: '30px', 
+                    backgroundColor: 'white'}}
+          onClick={() => this.handleChangeClick(i)}
+        >
+          {"정령 교체"}
+        </button>
+      )
+    }
+    const change2 = [];
+    for (let i = 0; i < 2; i++) {
+      change2.push(
+        <button
+          key={i}
+          className="change-button2"
+          style={{  margin: '10px',
+                    fontSize: '10px', 
+                    width: '100px', 
+                    height: '20px', 
                     backgroundColor: 'white'}}
           onClick={() => this.handleChangeClick(i)}
         >
@@ -1094,6 +1152,24 @@ class App extends Component {
         </button>
       )
     }
+    const hand2 = [];
+    for (let i = 0; i < 2; i++) {
+      let spirit = this.state.inventory.hand[i];
+      hand2.push(
+        <button
+          key={i}
+          className="hand-button2"
+          style={{  margin: '10px',
+                    fontSize: '10px', 
+                    width: '100px', 
+                    height: '180px', 
+                    backgroundColor: (this.state.inventory.selected === i ? "yellow":"white")  }}
+          onClick={() => this.handleSpiritClick(i)}
+        >
+          {spirit.getString()}
+        </button>
+      )
+    }
 
     const pocket = [];
     for (let i = 2; i >= 0; i--) {
@@ -1111,56 +1187,116 @@ class App extends Component {
         </button>
       )
     }
+    const pocket2 = [];
+    for (let i = 2; i >= 0; i--) {
+      let spirit = this.state.inventory.poket[i];
+      pocket2.push(
+        <button
+          key={i}
+          className="procket-button2"
+          style={{  fontSize: '9px', 
+                    width: '60px', 
+                    height: '100px', 
+                    backgroundColor: 'white' }}
+        >
+          {spirit.getString()}
+        </button>
+      )
+    }
     
     return (
       <div className="App">
+        <Mobile>
         <h1>초월 시뮬레이터</h1>
-        {<select onChange={this.selectEquipmentBoard}>
-          <option value={1}>투구</option>
-          <option value={2}>견갑</option>
-          <option value={3}>상의</option>
-          <option value={4}>하의</option>
-          <option value={5}>장갑</option>
-        </select>}
+          {<select onChange={this.selectEquipmentBoard}>
+            <option value={1}>투구</option>
+            <option value={2}>견갑</option>
+            <option value={3}>상의</option>
+            <option value={4}>하의</option>
+            <option value={5}>장갑</option>
+          </select>}
 
-        {<select onChange={this.selectLevelBoard}>
-          <option value={1}>1 단계</option>
-          <option value={2}>2 단계</option>
-          <option value={3}>3 단계</option>
-        </select>}
+          {<select onChange={this.selectLevelBoard}>
+            <option value={1}>1 단계</option>
+            <option value={2}>2 단계</option>
+            <option value={3}>3 단계</option>
+          </select>}
 
-        {<button onClick={() => this.refreshBoard()}>
-          새로고침
-        </button>}
-        <div className="button-grid"
-             style={{ margin: '30px'}}
-        >
-          {rows}
-        </div>
-        <div>
-          <div style={{ fontSize: '15px',
-                        paddingBottom: '15px'}}>
-            {this.getStringProgress()}
-          </div>
-          <span style={{ margin: '15px',
-                         position: 'relative',
-                         top: '100px',
-                         right: '175px'}}>{pocket}</span>
-          <span style={{ margin: '15px', 
-                         position: 'relative',
-                         right: '128px'}}>{hand}</span>
-          <div>
-            <span style={{position: 'relative',
-                         bottom: '30px'}}>
-                {change}
-            </span>
+          {<button onClick={() => this.refreshBoard()}>
+            새로고침
+          </button>}
+          <div className="button-grid"
+              style={{ margin: '30px'}}
+          >
+            {rows2}
           </div>
           <div>
-            <span>
-                {"남은 정령교체 횟수 : " + this.state.inventory.change}
-            </span>
+            <div style={{ fontSize: '15px',
+                          paddingBottom: '15px'}}>
+              {this.getStringProgress()}
+            </div>
+            <span>{hand2}</span>
+            <div>
+              <span style={{position: 'relative',
+                          bottom: '20px'}}>
+                  {change2}
+              </span>
+            </div>
+              <div>
+                  {"남은 정령교체 횟수 : " + this.state.inventory.change}
+              </div>
+            <div>{pocket2}</div>
           </div>
-        </div>
+        </Mobile>
+        <Pc>
+          <h1>초월 시뮬레이터</h1>
+          {<select onChange={this.selectEquipmentBoard}>
+            <option value={1}>투구</option>
+            <option value={2}>견갑</option>
+            <option value={3}>상의</option>
+            <option value={4}>하의</option>
+            <option value={5}>장갑</option>
+          </select>}
+
+          {<select onChange={this.selectLevelBoard}>
+            <option value={1}>1 단계</option>
+            <option value={2}>2 단계</option>
+            <option value={3}>3 단계</option>
+          </select>}
+
+          {<button onClick={() => this.refreshBoard()}>
+            새로고침
+          </button>}
+          <div className="button-grid"
+              style={{ margin: '30px'}}
+          >
+            {rows}
+          </div>
+          <div>
+            <div style={{ fontSize: '15px',
+                          paddingBottom: '15px'}}>
+              {this.getStringProgress()}
+            </div>
+            <span style={{ margin: '15px',
+                          position: 'relative',
+                          top: '100px',
+                          right: '175px'}}>{pocket}</span>
+            <span style={{ margin: '15px', 
+                          position: 'relative',
+                          right: '128px'}}>{hand}</span>
+            <div>
+              <span style={{position: 'relative',
+                          bottom: '30px'}}>
+                  {change}
+              </span>
+            </div>
+            <div>
+              <span>
+                  {"남은 정령교체 횟수 : " + this.state.inventory.change}
+              </span>
+            </div>
+          </div>
+        </Pc>
       </div>
     );
   }
